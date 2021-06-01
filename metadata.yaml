@@ -2,6 +2,8 @@ homepage: "https://www.simoahava.com/"
 documentation: "https://www.simoahava.com/custom-templates/consent-mode/"
 versions:
   # Latest version
+  - sha: 222227aa409a2b2888b65e4deec81322409abd89
+    changeNotes: Add compatibility with GTM's new consent features.
+  # Older versions
   - sha: 9c8edaabdd97e703535f6844b1fa535b6412bfec
     changeNotes: Initial release
-  # Older versions
