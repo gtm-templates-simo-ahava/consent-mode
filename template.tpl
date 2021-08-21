@@ -1,4 +1,4 @@
-﻿___TERMS_OF_SERVICE___
+___TERMS_OF_SERVICE___
 
 By creating or modifying this file you agree to Google Tag Manager's Community
 Template Gallery Developer Terms of Service available at
@@ -130,6 +130,27 @@ ___TEMPLATE_PARAMETERS___
               "help": "Apply this setting to users from these \u003ca href\u003d\"https://en.wikipedia.org/wiki/ISO_3166-2\"\u003eregions\u003c/a\u003e (provide a comma-separated list). If you select \u003cstrong\u003eall\u003c/strong\u003e, the setting will apply to all users."
             },
             "isUnique": false
+          },
+          {
+            "param": {
+              "type": "SELECT",
+              "name": "personalization_storage",
+              "displayName": "Personalization",
+              "macrosInSelect": true,
+              "selectItems": [
+                {
+                  "value": "granted",
+                  "displayValue": "granted"
+                },
+                {
+                  "value": "denied",
+                  "displayValue": "denied"
+                }
+              ],
+              "simpleValueType": true,
+              "defaultValue": "granted"
+            },
+            "isUnique": false
           }
         ],
         "newRowButtonText": "Add Setting",
@@ -197,6 +218,24 @@ ___TEMPLATE_PARAMETERS___
         "simpleValueType": true,
         "defaultValue": "granted",
         "help": "If set to \u003cstrong\u003edenied\u003c/strong\u003e, Google Analytics tags will not read or write analytics cookies, and data collected to Google Analytics will not utilize persistent cookie identifiers (the identifiers are reset with every page load). \u003ca href\u003d\"https://support.google.com/analytics/answer/9976101#behavior\"\u003eMore information\u003c/a\u003e."
+      },
+      {
+        "type": "SELECT",
+        "name": "update_personalization_storage",
+        "displayName": "Personalization",
+        "macrosInSelect": true,
+        "selectItems": [
+          {
+            "value": "granted",
+            "displayValue": "granted"
+          },
+          {
+            "value": "denied",
+            "displayValue": "denied"
+          }
+        ],
+        "simpleValueType": true,
+        "defaultValue": "granted"
       }
     ],
     "enablingConditions": [
@@ -255,7 +294,8 @@ if (data.command === 'default') {
     };
     const gtmConsent = {
       ad_storage: setting.ad_storage,
-      analytics_storage: setting.analytics_storage
+      analytics_storage: setting.analytics_storage,
+      personalization_storage: setting.personalization_storage
     };
     if (setting.regions !== 'all') {
       settingObject.region = setting.regions.split(',').map(r => r.trim());
@@ -273,7 +313,8 @@ if (data.command === 'update') {
   });
   updateConsentState({
     ad_storage: data.update_ad_storage,
-    analytics_storage: data.update_analytics_storage
+    analytics_storage: data.update_analytics_storage,
+    personalization_storage: data.update_personalization_storage
   });
 }
 
@@ -475,6 +516,37 @@ ___WEB_PERMISSIONS___
                     "boolean": true
                   }
                 ]
+              },
+              {
+                "type": 3,
+                "mapKey": [
+                  {
+                    "type": 1,
+                    "string": "consentType"
+                  },
+                  {
+                    "type": 1,
+                    "string": "read"
+                  },
+                  {
+                    "type": 1,
+                    "string": "write"
+                  }
+                ],
+                "mapValue": [
+                  {
+                    "type": 1,
+                    "string": "personalization_storage"
+                  },
+                  {
+                    "type": 8,
+                    "boolean": true
+                  },
+                  {
+                    "type": 8,
+                    "boolean": true
+                  }
+                ]
               }
             ]
           }
@@ -533,11 +605,13 @@ scenarios:
     // Verify that the tag finished successfully.
     assertApi('setDefaultConsentState').wasCalledWith({
       ad_storage: 'granted',
-      analytics_storage: 'denied'
+      analytics_storage: 'denied',
+      personalization_storage: 'granted'
     });
     assertApi('setDefaultConsentState').wasCalledWith({
       ad_storage: 'denied',
       analytics_storage: 'granted',
+      personalization_storage: 'granted',
       region: ['ES', 'US-AK']
     });
     assertApi('gtmOnSuccess').wasCalled();
@@ -561,7 +635,8 @@ scenarios:
     // Verify that the tag finished successfully.
     assertApi('updateConsentState').wasCalledWith({
       ad_storage: 'denied',
-      analytics_storage: 'granted'
+      analytics_storage: 'granted',
+      personalization_storage: 'granted',
     });
     assertApi('gtmOnSuccess').wasCalled();
 - name: extra settings sent
@@ -583,16 +658,19 @@ setup: |-
     settingsTable: [{
       ad_storage: 'granted',
       analytics_storage: 'denied',
+      personalization_storage: 'granted',
       wait_for_update: 500,
       regions: 'all'
     },{
       ad_storage: 'denied',
       analytics_storage: 'granted',
+      personalization_storage: 'granted',
       wait_for_update: 1000,
       regions: 'ES, US-AK'
     }],
     update_analytics_storage: 'granted',
     update_ad_storage: 'denied',
+    update_personalization_storage: 'granted',
     url_passthrough: true,
     ads_data_redaction: true
   };
