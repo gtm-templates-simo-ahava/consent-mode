@@ -226,6 +226,13 @@ ___TEMPLATE_PARAMETERS___
         "checkboxText": "Redact Ads Data",
         "simpleValueType": true,
         "help": "If this is checked \u003cstrong\u003eand\u003c/strong\u003e Advertising consent status is \u003cstrong\u003edenied\u003c/strong\u003e, Google\u0027s advertising tags will drop all advertising identifiers from the requests, and traffic will be routed through cookieless domains."
+      },
+      {
+        "type": "CHECKBOX",
+        "name": "sendDataLayer",
+        "checkboxText": "Push dataLayer Event",
+        "simpleValueType": true,
+        "help": "When consent is set to \"default\", a dataLayer event with \u003cstrong\u003eevent: \u0027gtm_consent_default\u0027\u003c/strong\u003e is sent, together with consent state for both \u003cstrong\u003ead_storage\u003c/strong\u003e and \u003cstrong\u003eanalytics_storage\u003c/strong\u003e. When an \"update\" is fired, a dataLayer event with \u003cstrong\u003eevent: \u0027gtm_consent_update\u0027\u003c/strong\u003e is pushed together with details about the updated consent state."
       }
     ]
   }
@@ -235,6 +242,7 @@ ___TEMPLATE_PARAMETERS___
 ___SANDBOXED_JS_FOR_WEB_TEMPLATE___
 
 const createArgumentsQueue = require('createArgumentsQueue');
+const dataLayerPush = require('createQueue')('dataLayer');
 const log = require('logToConsole');
 const makeTableMap = require('makeTableMap');
 const setDefaultConsentState = require('setDefaultConsentState');
@@ -262,7 +270,15 @@ if (data.command === 'default') {
       gtmConsent.region = setting.regions.split(',').map(r => r.trim());
     }
     gtag('consent', 'default', settingObject);
-    setDefaultConsentState(gtmConsent);    
+    setDefaultConsentState(gtmConsent);
+    if (data.sendDataLayer) {
+      dataLayerPush({
+        event: 'gtm_consent_default',
+        ad_storage: setting.ad_storage,
+        analytics_storage: setting.analytics_storage,
+        consent_region: gtmConsent.region
+      });
+    }
   });
 }
 
@@ -275,6 +291,13 @@ if (data.command === 'update') {
     ad_storage: data.update_ad_storage,
     analytics_storage: data.update_analytics_storage
   });
+  if (data.sendDataLayer) {
+    dataLayerPush({
+      event: 'gtm_consent_update',
+      ad_storage: data.update_ad_storage,
+      analytics_storage: data.update_analytics_storage
+    });
+  }
 }
 
 // Call data.gtmOnSuccess when the tag is finished.
