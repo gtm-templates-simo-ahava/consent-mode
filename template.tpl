@@ -241,19 +241,28 @@ ___TEMPLATE_PARAMETERS___
 
 ___SANDBOXED_JS_FOR_WEB_TEMPLATE___
 
-const createArgumentsQueue = require('createArgumentsQueue');
 const dataLayerPush = require('createQueue')('dataLayer');
+const gtag = require('createArgumentsQueue')('gtag', 'dataLayer');
 const log = require('logToConsole');
 const makeTableMap = require('makeTableMap');
 const setDefaultConsentState = require('setDefaultConsentState');
 const updateConsentState = require('updateConsentState');
 
-const gtag = createArgumentsQueue('gtag', 'dataLayer');
-
 // Set advanced settings
 if (data.url_passthrough) gtag('set', 'url_passthrough', true);
 if (data.ads_data_redaction) gtag('set', 'ads_data_redaction', true);
 
+// dataLayer.push helper
+const dlPush = (isDefault, ads, analytics, region) => {
+  dataLayerPush({
+    event: 'gtm_consent_' + (isDefault ? 'default' : 'update'),
+    ad_storage: ads,
+    analytics_storage: analytics,
+    consent_region: region
+  });
+};
+
+// Process default consent state
 if (data.command === 'default') {
   data.settingsTable.forEach(setting => {
     const settingObject = {
@@ -261,27 +270,18 @@ if (data.command === 'default') {
       analytics_storage: setting.analytics_storage,
       wait_for_update: setting.wait_for_update
     };
-    const gtmConsent = {
-      ad_storage: setting.ad_storage,
-      analytics_storage: setting.analytics_storage
-    };
     if (setting.regions !== 'all') {
       settingObject.region = setting.regions.split(',').map(r => r.trim());
-      gtmConsent.region = setting.regions.split(',').map(r => r.trim());
     }
+    setDefaultConsentState(settingObject);
     gtag('consent', 'default', settingObject);
-    setDefaultConsentState(gtmConsent);
     if (data.sendDataLayer) {
-      dataLayerPush({
-        event: 'gtm_consent_default',
-        ad_storage: setting.ad_storage,
-        analytics_storage: setting.analytics_storage,
-        consent_region: gtmConsent.region
-      });
+      dlPush(true, setting.ad_storage, setting.analytics_storage, settingObject.region);
     }
   });
 }
 
+// Process updated consent state
 if (data.command === 'update') {
   gtag('consent', 'update', {
     ad_storage: data.update_ad_storage,
@@ -292,11 +292,7 @@ if (data.command === 'update') {
     analytics_storage: data.update_analytics_storage
   });
   if (data.sendDataLayer) {
-    dataLayerPush({
-      event: 'gtm_consent_update',
-      ad_storage: data.update_ad_storage,
-      analytics_storage: data.update_analytics_storage
-    });
+    dlPush(false, data.update_ad_storage, data.update_analytics_storage);
   }
 }
 
@@ -498,6 +494,37 @@ ___WEB_PERMISSIONS___
                     "boolean": true
                   }
                 ]
+              },
+              {
+                "type": 3,
+                "mapKey": [
+                  {
+                    "type": 1,
+                    "string": "consentType"
+                  },
+                  {
+                    "type": 1,
+                    "string": "read"
+                  },
+                  {
+                    "type": 1,
+                    "string": "write"
+                  }
+                ],
+                "mapValue": [
+                  {
+                    "type": 1,
+                    "string": "wait_for_update"
+                  },
+                  {
+                    "type": 8,
+                    "boolean": true
+                  },
+                  {
+                    "type": 8,
+                    "boolean": true
+                  }
+                ]
               }
             ]
           }
@@ -556,12 +583,14 @@ scenarios:
     // Verify that the tag finished successfully.
     assertApi('setDefaultConsentState').wasCalledWith({
       ad_storage: 'granted',
-      analytics_storage: 'denied'
+      analytics_storage: 'denied',
+      wait_for_update: 500
     });
     assertApi('setDefaultConsentState').wasCalledWith({
       ad_storage: 'denied',
       analytics_storage: 'granted',
-      region: ['ES', 'US-AK']
+      region: ['ES', 'US-AK'],
+      wait_for_update: 1000
     });
     assertApi('gtmOnSuccess').wasCalled();
 - name: updated settings sent
@@ -600,6 +629,16 @@ scenarios:
 
     // Verify that the tag finished successfully.
     assertApi('gtmOnSuccess').wasCalled();
+- name: dataLayer events generated
+  code: "mockData.sendDataLayer = true;\n\nlet dlCalled = 0;\n\nmock('createQueue',\
+    \ name => {\n  return o => {\n    require('logToConsole')(o);\n    if (o.event\
+    \ === 'gtm_consent_default' && o.ad_storage === 'granted' && o.analytics_storage\
+    \ === 'denied') dlCalled++;\n    if (o.event === 'gtm_consent_default' && o.ad_storage\
+    \ === 'denied' && o.analytics_storage === 'granted' && o.consent_region.join()\
+    \ === 'ES,US-AK') dlCalled++;\n  };\n});\n    \n// Call runCode to run the template's\
+    \ code.\nrunCode(mockData);\n\n// Verify that the tag finished successfully.\n\
+    assertApi('gtmOnSuccess').wasCalled();\nassertThat(dlCalled, 'dataLayer not called\
+    \ with correct arguments').isEqualTo(2);"
 setup: |-
   const mockData = {
     command: 'default',
@@ -617,7 +656,8 @@ setup: |-
     update_analytics_storage: 'granted',
     update_ad_storage: 'denied',
     url_passthrough: true,
-    ads_data_redaction: true
+    ads_data_redaction: true,
+    sendDataLayer: false
   };
 
 
