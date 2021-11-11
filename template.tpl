@@ -110,6 +110,27 @@ ___TEMPLATE_PARAMETERS___
           },
           {
             "param": {
+              "type": "SELECT",
+              "name": "personalization_storage",
+              "displayName": "Personalization",
+              "macrosInSelect": true,
+              "selectItems": [
+                {
+                  "value": "granted",
+                  "displayValue": "granted"
+                },
+                {
+                  "value": "denied",
+                  "displayValue": "denied"
+                }
+              ],
+              "simpleValueType": true,
+              "defaultValue": "granted"
+            },
+            "isUnique": false
+          },
+          {
+            "param": {
               "type": "TEXT",
               "name": "wait_for_update",
               "displayName": "Wait for Update",
@@ -197,6 +218,24 @@ ___TEMPLATE_PARAMETERS___
         "simpleValueType": true,
         "defaultValue": "granted",
         "help": "If set to \u003cstrong\u003edenied\u003c/strong\u003e, Google Analytics tags will not read or write analytics cookies, and data collected to Google Analytics will not utilize persistent cookie identifiers (the identifiers are reset with every page load). \u003ca href\u003d\"https://support.google.com/analytics/answer/9976101#behavior\"\u003eMore information\u003c/a\u003e."
+      },
+      {
+        "type": "SELECT",
+        "name": "update_personalization_storage",
+        "displayName": "Personalization",
+        "macrosInSelect": true,
+        "selectItems": [
+          {
+            "value": "granted",
+            "displayValue": "granted"
+          },
+          {
+            "value": "denied",
+            "displayValue": "denied"
+          }
+        ],
+        "simpleValueType": true,
+        "defaultValue": "granted"
       }
     ],
     "enablingConditions": [
@@ -253,11 +292,12 @@ if (data.url_passthrough) gtag('set', 'url_passthrough', true);
 if (data.ads_data_redaction) gtag('set', 'ads_data_redaction', true);
 
 // dataLayer.push helper
-const dlPush = (isDefault, ads, analytics, region) => {
+const dlPush = (isDefault, ads, analytics, personalization, region) => {
   dataLayerPush({
     event: 'gtm_consent_' + (isDefault ? 'default' : 'update'),
     ad_storage: ads,
     analytics_storage: analytics,
+    personalization_storage: personalization,
     consent_region: region
   });
 };
@@ -268,6 +308,7 @@ if (data.command === 'default') {
     const settingObject = {
       ad_storage: setting.ad_storage,
       analytics_storage: setting.analytics_storage,
+      personalization_storage: setting.personalization_storage,
       wait_for_update: setting.wait_for_update
     };
     if (setting.regions !== 'all') {
@@ -276,7 +317,7 @@ if (data.command === 'default') {
     setDefaultConsentState(settingObject);
     gtag('consent', 'default', settingObject);
     if (data.sendDataLayer) {
-      dlPush(true, setting.ad_storage, setting.analytics_storage, settingObject.region);
+      dlPush(true, setting.ad_storage, setting.analytics_storage, setting.personalization_storage, settingObject.region);
     }
   });
 }
@@ -285,14 +326,16 @@ if (data.command === 'default') {
 if (data.command === 'update') {
   gtag('consent', 'update', {
     ad_storage: data.update_ad_storage,
-    analytics_storage: data.update_analytics_storage
+    analytics_storage: data.update_analytics_storage,
+    personalization_storage: data.update_personalization_storage
   });
   updateConsentState({
     ad_storage: data.update_ad_storage,
-    analytics_storage: data.update_analytics_storage
+    analytics_storage: data.update_analytics_storage,
+    personalization_storage: data.update_personalization_storage
   });
   if (data.sendDataLayer) {
-    dlPush(false, data.update_ad_storage, data.update_analytics_storage);
+    dlPush(false, data.update_ad_storage, data.update_analytics_storage, data.update_personalization_storage);
   }
 }
 
@@ -525,6 +568,37 @@ ___WEB_PERMISSIONS___
                     "boolean": true
                   }
                 ]
+              },
+              {
+                "type": 3,
+                "mapKey": [
+                  {
+                    "type": 1,
+                    "string": "consentType"
+                  },
+                  {
+                    "type": 1,
+                    "string": "read"
+                  },
+                  {
+                    "type": 1,
+                    "string": "write"
+                  }
+                ],
+                "mapValue": [
+                  {
+                    "type": 1,
+                    "string": "personalization_storage"
+                  },
+                  {
+                    "type": 8,
+                    "boolean": true
+                  },
+                  {
+                    "type": 8,
+                    "boolean": true
+                  }
+                ]
               }
             ]
           }
@@ -564,6 +638,7 @@ scenarios:
           assertThat(arguments[2]).isEqualTo({
             ad_storage: 'granted',
             analytics_storage: 'denied',
+            personalization_storage: 'denied',
             wait_for_update: 500
           });
           index++;
@@ -571,6 +646,7 @@ scenarios:
           assertThat(arguments[2]).isEqualTo({
             ad_storage: 'denied',
             analytics_storage: 'granted',
+            personalization_storage: 'granted',
             wait_for_update: 1000,
             region: ['ES', 'US-AK']
           });
@@ -584,11 +660,13 @@ scenarios:
     assertApi('setDefaultConsentState').wasCalledWith({
       ad_storage: 'granted',
       analytics_storage: 'denied',
+      personalization_storage: 'denied',
       wait_for_update: 500
     });
     assertApi('setDefaultConsentState').wasCalledWith({
       ad_storage: 'denied',
       analytics_storage: 'granted',
+      personalization_storage: 'granted',
       region: ['ES', 'US-AK'],
       wait_for_update: 1000
     });
@@ -602,7 +680,8 @@ scenarios:
         if (arguments[0] === 'consent') {
           assertThat(arguments[2]).isEqualTo({
             ad_storage: 'denied',
-            analytics_storage: 'granted'
+            analytics_storage: 'granted',
+            personalization_storage: 'granted'
           });
         }
       };
@@ -613,7 +692,8 @@ scenarios:
     // Verify that the tag finished successfully.
     assertApi('updateConsentState').wasCalledWith({
       ad_storage: 'denied',
-      analytics_storage: 'granted'
+      analytics_storage: 'granted',
+      personalization_storage: 'granted'
     });
     assertApi('gtmOnSuccess').wasCalled();
 - name: extra settings sent
@@ -633,8 +713,9 @@ scenarios:
   code: "mockData.sendDataLayer = true;\n\nlet dlCalled = 0;\n\nmock('createQueue',\
     \ name => {\n  return o => {\n    require('logToConsole')(o);\n    if (o.event\
     \ === 'gtm_consent_default' && o.ad_storage === 'granted' && o.analytics_storage\
-    \ === 'denied') dlCalled++;\n    if (o.event === 'gtm_consent_default' && o.ad_storage\
-    \ === 'denied' && o.analytics_storage === 'granted' && o.consent_region.join()\
+    \ === 'denied' && o.personalization_storage === 'denied') dlCalled++;\n    if\
+    \ (o.event === 'gtm_consent_default' && o.ad_storage === 'denied' && o.analytics_storage\
+    \ === 'granted' && o.personalization_storage === 'granted' && o.consent_region.join()\
     \ === 'ES,US-AK') dlCalled++;\n  };\n});\n    \n// Call runCode to run the template's\
     \ code.\nrunCode(mockData);\n\n// Verify that the tag finished successfully.\n\
     assertApi('gtmOnSuccess').wasCalled();\nassertThat(dlCalled, 'dataLayer not called\
@@ -645,16 +726,19 @@ setup: |-
     settingsTable: [{
       ad_storage: 'granted',
       analytics_storage: 'denied',
+      personalization_storage: 'denied',
       wait_for_update: 500,
       regions: 'all'
     },{
       ad_storage: 'denied',
       analytics_storage: 'granted',
+      personalization_storage: 'granted',
       wait_for_update: 1000,
       regions: 'ES, US-AK'
     }],
     update_analytics_storage: 'granted',
     update_ad_storage: 'denied',
+    update_personalization_storage: 'granted',
     url_passthrough: true,
     ads_data_redaction: true,
     sendDataLayer: false
