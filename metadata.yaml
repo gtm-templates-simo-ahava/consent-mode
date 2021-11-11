@@ -2,9 +2,11 @@ homepage: "https://www.simoahava.com/"
 documentation: "https://www.simoahava.com/custom-templates/consent-mode/"
 versions:
   # Latest version
+  - sha: 6c8e7d03790f449a45e58ef97e5efd51dc8b9b29
+    changeNotes: Add support for personalization_storage
+  # Older versions
   - sha: 932f82975c3e80ad9da4a707cac264bfb9da3695
     changeNotes: Code refactor, no change to functionality
-  # Older versions
   - sha: 9a6b9197a301bf1dc306985062a15b75a666246e
     changeNotes: Added option to push a message to dataLayer upon consent state changes
   - sha: 222227aa409a2b2888b65e4deec81322409abd89
