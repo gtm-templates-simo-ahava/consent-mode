@@ -272,6 +272,14 @@ ___TEMPLATE_PARAMETERS___
         "checkboxText": "Push dataLayer Event",
         "simpleValueType": true,
         "help": "When consent is set to \"default\", a dataLayer event with \u003cstrong\u003eevent: \u0027gtm_consent_default\u0027\u003c/strong\u003e is sent, together with consent state for both \u003cstrong\u003ead_storage\u003c/strong\u003e and \u003cstrong\u003eanalytics_storage\u003c/strong\u003e. When an \"update\" is fired, a dataLayer event with \u003cstrong\u003eevent: \u0027gtm_consent_update\u0027\u003c/strong\u003e is pushed together with details about the updated consent state."
+      },
+      {
+        "type": "CHECKBOX",
+        "name": "sendGtag",
+        "checkboxText": "Fire the Global Site Tag (gtag) command",
+        "simpleValueType": true,
+        "help": "Only check this if you also want to generate a gtag() command for consent. This should be unnecessary, but the option is left here for compatibility.",
+        "defaultValue": false
       }
     ]
   }
@@ -315,7 +323,7 @@ if (data.command === 'default') {
       settingObject.region = setting.regions.split(',').map(r => r.trim());
     }
     setDefaultConsentState(settingObject);
-    gtag('consent', 'default', settingObject);
+    if (data.sendGtag) gtag('consent', 'default', settingObject);
     if (data.sendDataLayer) {
       dlPush(true, setting.ad_storage, setting.analytics_storage, setting.personalization_storage, settingObject.region);
     }
@@ -324,11 +332,13 @@ if (data.command === 'default') {
 
 // Process updated consent state
 if (data.command === 'update') {
-  gtag('consent', 'update', {
-    ad_storage: data.update_ad_storage,
-    analytics_storage: data.update_analytics_storage,
-    personalization_storage: data.update_personalization_storage
-  });
+  if (data.sendGtag) {
+    gtag('consent', 'update', {
+      ad_storage: data.update_ad_storage,
+      analytics_storage: data.update_analytics_storage,
+      personalization_storage: data.update_personalization_storage
+    });
+  }
   updateConsentState({
     ad_storage: data.update_ad_storage,
     analytics_storage: data.update_analytics_storage,
@@ -361,6 +371,9 @@ ___WEB_PERMISSIONS___
           }
         }
       ]
+    },
+    "clientAnnotations": {
+      "isEditedByUser": true
     },
     "isRequired": true
   },
@@ -632,6 +645,7 @@ scenarios:
 - name: default settings sent
   code: |-
     let index = 1;
+    mockData.sendGtag = true;
     mock('createArgumentsQueue', () => {
       return function() {
         if (arguments[0] === 'consent' && index === 1) {
@@ -741,7 +755,8 @@ setup: |-
     update_personalization_storage: 'granted',
     url_passthrough: true,
     ads_data_redaction: true,
-    sendDataLayer: false
+    sendDataLayer: false,
+    sendGtag: false
   };
 
 
