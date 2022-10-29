@@ -290,14 +290,17 @@ ___SANDBOXED_JS_FOR_WEB_TEMPLATE___
 
 const dataLayerPush = require('createQueue')('dataLayer');
 const gtag = require('createArgumentsQueue')('gtag', 'dataLayer');
+const gtagSet = require('gtagSet');
 const log = require('logToConsole');
 const makeTableMap = require('makeTableMap');
 const setDefaultConsentState = require('setDefaultConsentState');
 const updateConsentState = require('updateConsentState');
 
 // Set advanced settings
-if (data.url_passthrough) gtag('set', 'url_passthrough', true);
-if (data.ads_data_redaction) gtag('set', 'ads_data_redaction', true);
+gtagSet({
+  url_passthrough: data.url_passthrough || false,
+  ads_data_redaction: data.ads_data_redaction || false
+});
 
 // dataLayer.push helper
 const dlPush = (isDefault, ads, analytics, personalization, region) => {
@@ -612,6 +615,36 @@ ___WEB_PERMISSIONS___
                     "boolean": true
                   }
                 ]
+              }
+            ]
+          }
+        }
+      ]
+    },
+    "clientAnnotations": {
+      "isEditedByUser": true
+    },
+    "isRequired": true
+  },
+  {
+    "instance": {
+      "key": {
+        "publicId": "write_data_layer",
+        "versionId": "1"
+      },
+      "param": [
+        {
+          "key": "keyPatterns",
+          "value": {
+            "type": 2,
+            "listItem": [
+              {
+                "type": 1,
+                "string": "url_passthrough"
+              },
+              {
+                "type": 1,
+                "string": "ads_data_redaction"
               }
             ]
           }
