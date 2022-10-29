@@ -2,9 +2,11 @@ homepage: "https://www.simoahava.com/"
 documentation: "https://www.simoahava.com/custom-templates/consent-mode/"
 versions:
   # Latest version
+  - sha: 49caff33401668adec8470ac068209bac68588c5
+    changeNotes: Improve timing and accuracy of url_passthrough and ads_data_redaction options.
+  # Older versions
   - sha: 29a533d3cd7d0686fd24140523a9e711f2bf8faa
     changeNotes: Make gtag() command optional in order to avoid  creating extra consent events.
-  # Older versions
   - sha: 6c8e7d03790f449a45e58ef97e5efd51dc8b9b29
     changeNotes: Add support for personalization_storage
   - sha: 932f82975c3e80ad9da4a707cac264bfb9da3695
