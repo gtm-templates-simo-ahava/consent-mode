@@ -76,16 +76,52 @@ ___TEMPLATE_PARAMETERS___
     ]
   },
   {
+    "type": "CHECKBOX",
+    "name": "eea",
+    "checkboxText": "Include EEA regions",
+    "simpleValueType": true,
+    "help": "Check this box to apply this tag only to visitors from the European Economic Area.",
+    "defaultValue": false,
+    "enablingConditions": [
+      {
+        "paramName": "command",
+        "paramValue": "default",
+        "type": "EQUALS"
+      }
+    ]
+  },
+  {
     "type": "TEXT",
     "name": "regions",
     "displayName": "Regions",
     "simpleValueType": true,
     "defaultValue": "all",
-    "help": "Apply this setting to users from these \u003ca href\u003d\"https://en.wikipedia.org/wiki/ISO_3166-2\"\u003eregions\u003c/a\u003e (provide a comma-separated list). If you select \u003cstrong\u003eall\u003c/strong\u003e, the setting will apply to all users.",
+    "help": "Apply this setting to users from these \u003ca href\u003d\"https://en.wikipedia.org/wiki/ISO_3166-2\"\u003eregions\u003c/a\u003e (provide a comma-separated list). If you type \u003cstrong\u003eall\u003c/strong\u003e, the setting will apply to all users. If you type \u003cstrong\u003eeea\u003c/strong\u003e as one of the regions, the tag will automatically include all European Economic Area regions as geographical targets for this command.",
     "enablingConditions": [
       {
-        "paramName": "command",
-        "paramValue": "default",
+        "paramName": "eea",
+        "paramValue": false,
+        "type": "EQUALS"
+      }
+    ],
+    "valueValidators": [
+      {
+        "type": "NON_EMPTY",
+        "errorMessage": "Set to \"all\" for all regions or add a comma-separated list of regions."
+      }
+    ]
+  },
+  {
+    "type": "TEXT",
+    "name": "regionsEEA",
+    "displayName": "Regions",
+    "simpleValueType": true,
+    "defaultValue": "eea",
+    "help": "Apply this setting to users from these \u003ca href\u003d\"https://en.wikipedia.org/wiki/ISO_3166-2\"\u003eregions\u003c/a\u003e (provide a comma-separated list). If you type \u003cstrong\u003eall\u003c/strong\u003e, the setting will apply to all users. If you type \u003cstrong\u003eeea\u003c/strong\u003e as one of the regions, the tag will automatically include all European Economic Area regions as geographical targets for this command.",
+    "enablingConditions": [
+      {
+        "paramName": "eea",
+        "paramValue": true,
         "type": "EQUALS"
       }
     ],
@@ -121,6 +157,10 @@ ___TEMPLATE_PARAMETERS___
               {
                 "value": "denied",
                 "displayValue": "denied"
+              },
+              {
+                "value": "notset",
+                "displayValue": "Not set"
               }
             ],
             "simpleValueType": true,
@@ -140,6 +180,10 @@ ___TEMPLATE_PARAMETERS___
               {
                 "value": "denied",
                 "displayValue": "denied"
+              },
+              {
+                "value": "notset",
+                "displayValue": "Not set"
               }
             ],
             "simpleValueType": true,
@@ -159,6 +203,10 @@ ___TEMPLATE_PARAMETERS___
               {
                 "value": "denied",
                 "displayValue": "denied"
+              },
+              {
+                "value": "notset",
+                "displayValue": "Not set"
               }
             ],
             "simpleValueType": true,
@@ -178,6 +226,10 @@ ___TEMPLATE_PARAMETERS___
               {
                 "value": "denied",
                 "displayValue": "denied"
+              },
+              {
+                "value": "notset",
+                "displayValue": "Not set"
               }
             ],
             "simpleValueType": true,
@@ -205,6 +257,10 @@ ___TEMPLATE_PARAMETERS___
               {
                 "value": "denied",
                 "displayValue": "denied"
+              },
+              {
+                "value": "notset",
+                "displayValue": "Not set"
               }
             ],
             "simpleValueType": true,
@@ -223,6 +279,10 @@ ___TEMPLATE_PARAMETERS___
               {
                 "value": "denied",
                 "displayValue": "denied"
+              },
+              {
+                "value": "notset",
+                "displayValue": "Not set"
               }
             ],
             "simpleValueType": true,
@@ -241,6 +301,10 @@ ___TEMPLATE_PARAMETERS___
               {
                 "value": "denied",
                 "displayValue": "denied"
+              },
+              {
+                "value": "notset",
+                "displayValue": "Not set"
               }
             ],
             "simpleValueType": true,
@@ -292,24 +356,69 @@ const makeTableMap = require('makeTableMap');
 const setDefaultConsentState = require('setDefaultConsentState');
 const updateConsentState = require('updateConsentState');
 
+const eeaRegions = [
+  "AT",
+  "BE",
+  "BG",
+  "HR",
+  "CY",
+  "CZ",
+  "DK",
+  "EE",
+  "FI",
+  "FR",
+  "DE",
+  "EL",
+  "HU",
+  "IE",
+  "IT",
+  "LV",
+  "LT",
+  "LU",
+  "MT",
+  "NL",
+  "PL",
+  "PT",
+  "RO",
+  "SK",
+  "SI",
+  "ES",
+  "SE",
+  "NO",
+  "IS",
+  "LI"
+];
+
+const regions = data.regions || data.regionsEEA;
+  
 // Determine the command and the setting object
 const consentApi = data.command === 'default' ? setDefaultConsentState : updateConsentState;
-const settingsObject = {
-  ad_storage: data.ad_storage,
-  analytics_storage: data.analytics_storage,
-  ad_user_data: data.ad_user_data,
-  ad_personalization: data.ad_personalization,
-  personalization_storage: data.personalization_storage,
-  functionality_storage: data.functionality_storage,
-  security_storage: data.security_storage
-};
+
+const settingsObject = {};
+
+if (data.ad_storage !== 'notset') settingsObject.ad_storage = data.ad_storage;
+if (data.analytics_storage !== 'notset') settingsObject.analytics_storage = data.analytics_storage;
+if (data.ad_user_data !== 'notset') settingsObject.ad_user_data = data.ad_user_data;
+if (data.ad_personalization !== 'notset') settingsObject.ad_personalization = data.ad_personalization;
+if (data.personalization_storage !== 'notset') settingsObject.personalization_storage = data.personalization_storage;
+if (data.functionality_storage !== 'notset') settingsObject.functionality_storage = data.functionality_storage;
+if (data.security_storage !== 'notset') settingsObject.security_storage = data.security_storage;
+
 
 // Settings specific to the "default" command
 if (data.command === 'default' && makeNumber(data.wait_for_update) > 0) {
   settingsObject.wait_for_update = makeNumber(data.wait_for_update);
 }
-if (data.command === 'default' && data.regions !== 'all') {
-  settingsObject.region = data.regions.split(',').map(r => r.trim());
+
+if (data.command === 'default' && regions !== 'all') {
+  let setRegions = regions.split(',').map(r => r.trim());
+  // Check if EEA regions are included
+  if (setRegions.indexOf('eea') > -1) {
+    setRegions = setRegions.concat(eeaRegions);
+    // Remove duplicates & eea
+    setRegions = setRegions.filter((val, idx) => setRegions.indexOf(val) === idx && val !== 'eea');
+  }
+  settingsObject.region = setRegions;
 }
   
 // Set advanced settings
@@ -698,13 +807,13 @@ scenarios:
 
     // Verify that the tag finished successfully.
     assertApi('setDefaultConsentState').wasCalledWith({
-      ad_storage: 'granted',
       analytics_storage: 'denied',
       ad_user_data: 'granted',
       ad_personalization: 'denied',
       personalization_storage: 'denied',
       functionality_storage: 'denied',
       security_storage: 'denied',
+      region: ['US-CA'],
       wait_for_update: 500
     });
 
@@ -718,7 +827,6 @@ scenarios:
 
     // Verify that the tag finished successfully.
     assertApi('updateConsentState').wasCalledWith({
-      ad_storage: 'granted',
       analytics_storage: 'denied',
       ad_user_data: 'granted',
       ad_personalization: 'denied',
@@ -741,17 +849,17 @@ scenarios:
 - name: dataLayer events generated
   code: "mockData.sendDataLayer = true;\n\nlet dlCalled = false;\n\nmock('createQueue',\
     \ name => {\n  return o => {\n    if (o.event === 'gtm_consent_default' && \n\
-    \        o.ad_storage === 'granted' && \n        o.analytics_storage === 'denied'\
-    \ && \n        o.ad_user_data === 'granted' &&\n        o.ad_personalization ===\
-    \ 'denied' &&\n        o.personalization_storage === 'denied' &&\n        o.functionality_storage\
-    \ === 'denied' &&\n        o.security_storage === 'denied') dlCalled = true;\n\
-    \    \n  };\n});\n    \n// Call runCode to run the template's code.\nrunCode(mockData);\n\
+    \        o.analytics_storage === 'denied' && \n        o.ad_user_data === 'granted'\
+    \ &&\n        o.ad_personalization === 'denied' &&\n        o.personalization_storage\
+    \ === 'denied' &&\n        o.functionality_storage === 'denied' &&\n        o.security_storage\
+    \ === 'denied' &&\n        o.region[0] === 'US-CA') dlCalled = true;\n    \n \
+    \ };\n});\n    \n// Call runCode to run the template's code.\nrunCode(mockData);\n\
     \n// Verify that the tag finished successfully.\nassertApi('gtmOnSuccess').wasCalled();\n\
     assertThat(dlCalled, 'dataLayer not called with correct arguments').isEqualTo(true);"
 setup: |-
   const mockData = {
     command: 'default',
-    ad_storage: 'granted',
+    ad_storage: 'notset',
     analytics_storage: 'denied',
     ad_user_data: 'granted',
     ad_personalization: 'denied',
@@ -759,7 +867,7 @@ setup: |-
     functionality_storage: 'denied',
     security_storage: 'denied',
     wait_for_update: 500,
-    regions: 'all',
+    regions: 'US-CA',
     url_passthrough: true,
     ads_data_redaction: true,
     sendDataLayer: false,
