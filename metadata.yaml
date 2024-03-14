@@ -2,9 +2,11 @@ homepage: "https://www.simoahava.com/"
 documentation: "https://www.simoahava.com/custom-templates/consent-mode/"
 versions:
   # Latest version
+  - sha: dae2395169233155711a816c57f8f17b37a3de49
+    changeNotes: Provide "Not set" option for consent signals to drop them from the call. Add option to quickly add EEA regions as targets.
+  # Older versions
   - sha: a998feb7322d805742030e9bb487b89c475e2749
     changeNotes: BREAKING CHANGE! Complete revamp of the template to accommodate new consent types. Requires reconfiguring all tags created with this template.
-  # Older versions
   - sha: ab3c243d7bcce3ae417eef63296a9f653ee685f0
     changeNotes: Add functionality_storage and security_storage as new consent states.
   - sha: 49caff33401668adec8470ac068209bac68588c5
