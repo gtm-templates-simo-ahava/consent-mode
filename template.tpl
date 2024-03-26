@@ -368,7 +368,7 @@ const eeaRegions = [
   "FI",
   "FR",
   "DE",
-  "EL",
+  "GR",
   "HU",
   "IE",
   "IT",
