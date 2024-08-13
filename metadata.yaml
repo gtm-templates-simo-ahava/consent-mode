@@ -2,9 +2,10 @@ homepage: "https://www.simoahava.com/"
 documentation: "https://www.simoahava.com/custom-templates/consent-mode/"
 versions:
   # Latest version
+  - sha: d9376fc5eb21e4c9f3e4a0972b12d2125084b1c1
+    changeNotes: Add support for Microsoft Consent Mode.
   - sha: 8de6b75da0bf250f42f0a0a9fe357b7e2408eea3
     changeNotes: Fix Greece country code EL -> GR
-  # Older versions
   - sha: dae2395169233155711a816c57f8f17b37a3de49
     changeNotes: Provide "Not set" option for consent signals to drop them from the call. Add option to quickly add EEA regions as targets.
   - sha: a998feb7322d805742030e9bb487b89c475e2749
