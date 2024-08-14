@@ -36,22 +36,6 @@ ___TEMPLATE_PARAMETERS___
 
 [
   {
-    "type": "CHECKBOX",
-    "name": "platform_google",
-    "checkboxText": "Enable Google Consent Mode",
-    "simpleValueType": true,
-    "alwaysInSummary": true,
-    "defaultValue": true
-  },
-  {
-    "type": "CHECKBOX",
-    "name": "platform_microsoft",
-    "checkboxText": "Enable Microsoft Consent Mode",
-    "simpleValueType": true,
-    "alwaysInSummary": true,
-    "defaultValue": false
-  },
-  {
     "type": "SELECT",
     "name": "command",
     "displayName": "Consent Command",
@@ -147,6 +131,14 @@ ___TEMPLATE_PARAMETERS___
         "errorMessage": "Set to \"all\" for all regions or add a comma-separated list of regions."
       }
     ]
+  },
+  {
+    "type": "CHECKBOX",
+    "name": "platform_microsoft",
+    "checkboxText": "Enable Microsoft Consent Mode",
+    "simpleValueType": true,
+    "alwaysInSummary": false,
+    "defaultValue": false
   },
   {
     "type": "GROUP",
@@ -379,7 +371,6 @@ const makeNumber = require('makeNumber');
 const makeTableMap = require('makeTableMap');
 const setDefaultConsentState = require('setDefaultConsentState');
 const updateConsentState = require('updateConsentState');
-const uetqPush = require('createQueue')('uetq'); 
 
 const eeaRegions = [
   "AT",
@@ -454,16 +445,13 @@ gtagSet({
 });
 
 // Set the consent state
-if (data.platform_google) {
-  consentApi(settingsObject);
-}
+consentApi(settingsObject);
 
 if (data.platform_microsoft) {
-  uetqPush('consent', data.command, {    
+  require('createQueue')('uetq')('consent', data.command, {    
     'ad_storage': data.ad_storage
-});
+  });
 }
-  
 
 // Push to dataLayer if needed
 if (data.sendDataLayer) {
