@@ -471,8 +471,11 @@ if(!pixie){
    });
    pQ = createQueue('pixie.actionQueue'); 
  }
-pixie = copyFromWindow('pixie');
-pixie('consent', data.command,  {'ad_storage': data.ad_storage});
+  pixie = copyFromWindow('pixie');
+  let cmSettings = {'ad_storage': data.ad_storage};
+  if (data.command === 'default' && settingsObject.hasOwnProperty('wait_for_update')===true)
+    cmSettings.wait_for_update = settingsObject.wait_for_update;
+  pixie('consent', data.command,  cmSettings);
 }
 
 // Push to dataLayer if needed
