@@ -134,11 +134,17 @@ ___TEMPLATE_PARAMETERS___
   },
   {
     "type": "CHECKBOX",
-    "name": "platform_microsoft",
-    "checkboxText": "Enable Microsoft Consent Mode",
+    "name": "platform_microsoft_ads",
+    "checkboxText": "Enable Microsoft Ads Consent Mode",
     "simpleValueType": true,
     "alwaysInSummary": false,
     "defaultValue": false
+  },
+  {
+    "type": "CHECKBOX",
+    "name": "platform_microsoft_xandr",
+    "checkboxText": "Enable Microsoft Xandr Consent Mode",
+    "simpleValueType": true
   },
   {
     "type": "GROUP",
@@ -371,6 +377,9 @@ const makeNumber = require('makeNumber');
 const makeTableMap = require('makeTableMap');
 const setDefaultConsentState = require('setDefaultConsentState');
 const updateConsentState = require('updateConsentState');
+const copyFromWindow = require('copyFromWindow');
+const setInWindow = require("setInWindow");
+const createQueue = require('createQueue');
 
 const eeaRegions = [
   "AT",
@@ -447,10 +456,26 @@ gtagSet({
 // Set the consent state
 consentApi(settingsObject);
 
-if (data.platform_microsoft) {
+if (data.platform_microsoft_ads) {
   require('createQueue')('uetq')('consent', data.command, {    
     'ad_storage': data.ad_storage
   });
+}
+if (data.platform_microsoft_xandr) {
+let pixie = copyFromWindow('pixie');
+if(!pixie){
+   log("Xandr config: script not loaded, loading");
+   let pQ;
+   setInWindow('pixie', (e, i, a) => {
+     pQ({ action: e, actionValue: i, params: a });
+   });
+   pQ = createQueue('pixie.actionQueue'); 
+ }
+  pixie = copyFromWindow('pixie');
+  let cmSettings = {'ad_storage': data.ad_storage};
+  if (data.command === 'default' && settingsObject.hasOwnProperty('wait_for_update')===true)
+    cmSettings.wait_for_update = settingsObject.wait_for_update;
+  pixie('consent', data.command,  cmSettings);
 }
 
 // Push to dataLayer if needed
@@ -562,6 +587,84 @@ ___WEB_PERMISSIONS___
                   {
                     "type": 1,
                     "string": "uetq"
+                  },
+                  {
+                    "type": 8,
+                    "boolean": true
+                  },
+                  {
+                    "type": 8,
+                    "boolean": true
+                  },
+                  {
+                    "type": 8,
+                    "boolean": false
+                  }
+                ]
+              },
+              {
+                "type": 3,
+                "mapKey": [
+                  {
+                    "type": 1,
+                    "string": "key"
+                  },
+                  {
+                    "type": 1,
+                    "string": "read"
+                  },
+                  {
+                    "type": 1,
+                    "string": "write"
+                  },
+                  {
+                    "type": 1,
+                    "string": "execute"
+                  }
+                ],
+                "mapValue": [
+                  {
+                    "type": 1,
+                    "string": "pixie"
+                  },
+                  {
+                    "type": 8,
+                    "boolean": true
+                  },
+                  {
+                    "type": 8,
+                    "boolean": true
+                  },
+                  {
+                    "type": 8,
+                    "boolean": false
+                  }
+                ]
+              },
+              {
+                "type": 3,
+                "mapKey": [
+                  {
+                    "type": 1,
+                    "string": "key"
+                  },
+                  {
+                    "type": 1,
+                    "string": "read"
+                  },
+                  {
+                    "type": 1,
+                    "string": "write"
+                  },
+                  {
+                    "type": 1,
+                    "string": "execute"
+                  }
+                ],
+                "mapValue": [
+                  {
+                    "type": 1,
+                    "string": "pixie.actionQueue"
                   },
                   {
                     "type": 8,
