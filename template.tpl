@@ -135,10 +135,11 @@ ___TEMPLATE_PARAMETERS___
   {
     "type": "CHECKBOX",
     "name": "platform_microsoft",
-    "checkboxText": "Enable Microsoft Consent Mode",
+    "checkboxText": "Enable Microsoft Consent Mode (Clarity + Bing)",
     "simpleValueType": true,
     "alwaysInSummary": false,
-    "defaultValue": false
+    "defaultValue": false,
+    "help": "If checked, this tag also sets consent signals for Clarity and Bing."
   },
   {
     "type": "GROUP",
@@ -173,16 +174,8 @@ ___TEMPLATE_PARAMETERS___
             ],
             "simpleValueType": true,
             "defaultValue": "denied",
-            "help": "If set to \u003cstrong\u003edenied\u003c/strong\u003e, Google and Microsoft\u0027s advertising tags and pixels will not be able to read or write first-party cookies. The use of third-party cookies is limited to only spam and fraud detection purposes. \u003ca href\u003d\"https://support.google.com/analytics/answer/9976101#behavior\"\u003eMore information\u003c/a\u003e."
-          }
-        ]
-      },
-      {
-        "type": "GROUP",
-        "name": "required_google",
-        "displayName": "Required for Google services",
-        "groupStyle": "NO_ZIPPY",
-        "subParams": [
+            "help": "If set to \u003cstrong\u003edenied\u003c/strong\u003e, Google and Microsoft\u0027s tags and pixels will not be able to read or write first-party cookies. The use of third-party cookies is limited to only spam and fraud detection purposes. \u003ca href\u003d\"https://support.google.com/analytics/answer/9976101#behavior\"\u003eMore information\u003c/a\u003e."
+          },
           {
             "type": "SELECT",
             "name": "analytics_storage",
@@ -204,8 +197,16 @@ ___TEMPLATE_PARAMETERS___
             ],
             "simpleValueType": true,
             "defaultValue": "denied",
-            "help": "If set to \u003cstrong\u003edenied\u003c/strong\u003e, Google Analytics tags will not read or write analytics cookies, and data collected to Google Analytics will not utilize persistent cookie identifiers (the identifiers are reset with every page load). \u003ca href\u003d\"https://support.google.com/analytics/answer/9976101#behavior\"\u003eMore information\u003c/a\u003e."
-          },
+            "help": "If set to \u003cstrong\u003edenied\u003c/strong\u003e, Google Analytics and Microsoft Clarity tags will not read or write analytics cookies, and data collected to Google Analytics will not utilize persistent cookie identifiers (the identifiers are reset with every page load). \u003ca href\u003d\"https://support.google.com/analytics/answer/9976101#behavior\"\u003eMore information\u003c/a\u003e."
+          }
+        ]
+      },
+      {
+        "type": "GROUP",
+        "name": "required_google",
+        "displayName": "Required for Google services",
+        "groupStyle": "NO_ZIPPY",
+        "subParams": [
           {
             "type": "SELECT",
             "name": "ad_user_data",
@@ -364,12 +365,16 @@ ___TEMPLATE_PARAMETERS___
 
 ___SANDBOXED_JS_FOR_WEB_TEMPLATE___
 
+const callInWindow = require('callInWindow');
+const copyFromWindow = require('copyFromWindow');
+const createQueue = require('createQueue');
 const dataLayerPush = require('createQueue')('dataLayer');
 const gtagSet = require('gtagSet');
 const log = require('logToConsole');
 const makeNumber = require('makeNumber');
 const makeTableMap = require('makeTableMap');
 const setDefaultConsentState = require('setDefaultConsentState');
+const setInWindow = require('setInWindow');
 const updateConsentState = require('updateConsentState');
 
 const eeaRegions = [
@@ -448,8 +453,23 @@ gtagSet({
 consentApi(settingsObject);
 
 if (data.platform_microsoft) {
-  require('createQueue')('uetq')('consent', data.command, {    
+  const getClarity = () => {
+    const clarity = copyFromWindow('clarity');
+    if (clarity) return clarity;
+    setInWindow('clarity', function() {
+      callInWindow('clarity.q.push', arguments);
+    });
+    createQueue('clarity.q');
+    return copyFromWindow('clarity');
+  };
+  const uetq = createQueue('uetq');
+  uetq('consent', data.command, {    
     'ad_storage': data.ad_storage
+  });
+  const clarity = getClarity();
+  clarity('consentv2', {
+    ad_Storage: data.ad_storage,
+    analytics_Storage: data.analytics_storage
   });
 }
 
@@ -574,6 +594,123 @@ ___WEB_PERMISSIONS___
                   {
                     "type": 8,
                     "boolean": false
+                  }
+                ]
+              },
+              {
+                "type": 3,
+                "mapKey": [
+                  {
+                    "type": 1,
+                    "string": "key"
+                  },
+                  {
+                    "type": 1,
+                    "string": "read"
+                  },
+                  {
+                    "type": 1,
+                    "string": "write"
+                  },
+                  {
+                    "type": 1,
+                    "string": "execute"
+                  }
+                ],
+                "mapValue": [
+                  {
+                    "type": 1,
+                    "string": "clarity"
+                  },
+                  {
+                    "type": 8,
+                    "boolean": true
+                  },
+                  {
+                    "type": 8,
+                    "boolean": true
+                  },
+                  {
+                    "type": 8,
+                    "boolean": false
+                  }
+                ]
+              },
+              {
+                "type": 3,
+                "mapKey": [
+                  {
+                    "type": 1,
+                    "string": "key"
+                  },
+                  {
+                    "type": 1,
+                    "string": "read"
+                  },
+                  {
+                    "type": 1,
+                    "string": "write"
+                  },
+                  {
+                    "type": 1,
+                    "string": "execute"
+                  }
+                ],
+                "mapValue": [
+                  {
+                    "type": 1,
+                    "string": "clarity.q"
+                  },
+                  {
+                    "type": 8,
+                    "boolean": true
+                  },
+                  {
+                    "type": 8,
+                    "boolean": true
+                  },
+                  {
+                    "type": 8,
+                    "boolean": false
+                  }
+                ]
+              },
+              {
+                "type": 3,
+                "mapKey": [
+                  {
+                    "type": 1,
+                    "string": "key"
+                  },
+                  {
+                    "type": 1,
+                    "string": "read"
+                  },
+                  {
+                    "type": 1,
+                    "string": "write"
+                  },
+                  {
+                    "type": 1,
+                    "string": "execute"
+                  }
+                ],
+                "mapValue": [
+                  {
+                    "type": 1,
+                    "string": "clarity.q.push"
+                  },
+                  {
+                    "type": 8,
+                    "boolean": false
+                  },
+                  {
+                    "type": 8,
+                    "boolean": false
+                  },
+                  {
+                    "type": 8,
+                    "boolean": true
                   }
                 ]
               }
