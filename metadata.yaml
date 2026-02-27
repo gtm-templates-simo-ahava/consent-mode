@@ -2,6 +2,8 @@ homepage: "https://www.simoahava.com/"
 documentation: "https://www.simoahava.com/custom-templates/consent-mode/"
 versions:
   # Latest version
+  - sha: 2363063bd8cac24c856273b3e2b4714b0b2587a5
+    changeNotes: Add support for IAB TCF integration.
   - sha: 8dea5c367947d07b21b71105ef9960c5125a9137
     changeNotes: Add support for Clarity Consent Mode when Microsoft mode is checked.
   - sha: 3fcb1a6ee4649cc59e8e3084bdd20d3192c6e24b
