@@ -10,10 +10,9 @@ ___INFO___
 
 {
   "type": "TAG",
-  "id": "cvt_temp_public_id",
+  "id": "cvt_K8GSG",
   "__wm": "VGVtcGFsdGUtQXV0aG9yX0NvbnNlbnRNb2RlLVNpbW8tQWhhdmE\u003d",
   "version": 1,
-  "securityGroups": [],
   "displayName": "Consent Mode (Google + Microsoft tags)",
   "categories": [
     "UTILITY",
@@ -28,7 +27,8 @@ ___INFO___
   "description": "Adjust tag behavior based on consent. This template utilizes the Consent API and can be used to adjust how Microsoft and Google\u0027s advertising tools use cookies and process ad identifiers.",
   "containerContexts": [
     "WEB"
-  ]
+  ],
+  "securityGroups": []
 }
 
 
@@ -357,6 +357,13 @@ ___TEMPLATE_PARAMETERS___
         "checkboxText": "Push dataLayer Event",
         "simpleValueType": true,
         "help": "When consent is set to \"default\", a dataLayer event with \u003cstrong\u003eevent: \u0027gtm_consent_default\u0027\u003c/strong\u003e is sent, together with all the consent states. When an \"update\" is fired, a dataLayer event with \u003cstrong\u003eevent: \u0027gtm_consent_update\u0027\u003c/strong\u003e is pushed together with details about the updated consent state."
+      },
+      {
+        "type": "CHECKBOX",
+        "name": "enableTCF",
+        "checkboxText": "Enable IAB TCF Support For Google Tags",
+        "simpleValueType": true,
+        "help": "If you are using IAB\u0027s Transparency and Consent Framework within your Consent Management Platform, you can check this box. When enabled, this setting automatically maps Google Consent Mode states to IAB TCF purposes. \u003ca href\u003d\"https://developers.google.com/tag-platform/security/guides/implement-TCF-strings#website\" target\u003d\"_blank\"\u003eRead more here\u003c/a\u003e."
       }
     ]
   }
@@ -471,6 +478,11 @@ if (data.platform_microsoft) {
     ad_Storage: data.ad_storage,
     analytics_Storage: data.analytics_storage
   });
+}
+
+// Add TCF integration
+if (data.enableTCF) {
+  setInWindow('gtag_enable_tcf_support', true, true);
 }
 
 // Push to dataLayer if needed
@@ -711,6 +723,45 @@ ___WEB_PERMISSIONS___
                   {
                     "type": 8,
                     "boolean": true
+                  }
+                ]
+              },
+              {
+                "type": 3,
+                "mapKey": [
+                  {
+                    "type": 1,
+                    "string": "key"
+                  },
+                  {
+                    "type": 1,
+                    "string": "read"
+                  },
+                  {
+                    "type": 1,
+                    "string": "write"
+                  },
+                  {
+                    "type": 1,
+                    "string": "execute"
+                  }
+                ],
+                "mapValue": [
+                  {
+                    "type": 1,
+                    "string": "gtag_enable_tcf_support"
+                  },
+                  {
+                    "type": 8,
+                    "boolean": true
+                  },
+                  {
+                    "type": 8,
+                    "boolean": true
+                  },
+                  {
+                    "type": 8,
+                    "boolean": false
                   }
                 ]
               }
